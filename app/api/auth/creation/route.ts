@@ -3,7 +3,7 @@ import { stripe } from "@/lib/stripe";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
-import {unstable_noStore as noStore} from "next/cache"
+import { unstable_noStore as noStore } from "next/cache";
 
 export async function GET() {
   noStore();
@@ -50,5 +50,9 @@ export async function GET() {
 
   revalidatePath("/api/auth/creation");
   revalidatePath("/");
-  return NextResponse.redirect("http://localhost:3000");
+  return NextResponse.redirect(
+    process.env.NODE_ENV === "development"
+      ? "https://localhost:3000"
+      : "https://trade-haven-gamma.vercel.app"
+  );
 }
