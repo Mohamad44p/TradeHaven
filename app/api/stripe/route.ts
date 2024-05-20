@@ -3,10 +3,11 @@ import { stripe } from "@/lib/stripe";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { headers } from "next/headers";
 import { Resend } from "resend";
-
+import {unstable_noStore as noStore } from "next/cache"
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
+  noStore();
   const body = await req.text();
   const { getUser } = getKindeServerSession();
   const user = await getUser();
