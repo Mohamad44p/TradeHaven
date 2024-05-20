@@ -22,7 +22,6 @@ import { SellProduct, State } from "@/app/actions";
 import { toast } from "sonner";
 import { UploadDropzone } from "@/lib/uploadthing";
 import { Submitbutton } from "../sell/SubmitButtons";
-import { redirect } from "next/navigation";
 
 export default function SellForm() {
   const initialState: State = {
@@ -37,7 +36,6 @@ export default function SellForm() {
   useEffect(() => {
     if (state.status === "success") {
       toast.success(state.message);
-      redirect("/");
     } else if (state.status === "error") {
       toast.error(state.message);
     }

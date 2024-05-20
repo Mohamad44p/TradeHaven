@@ -10,7 +10,16 @@ async function getData(userId: string) {
     where: {
       id: userId,
     },
+    select: {
+      stripeConnectedLinked: true,
+    },
   });
+
+  if (data?.stripeConnectedLinked === false) {
+    return redirect("/billing");
+  }
+
+  return null;
 }
 
 export default async function SellRoute() {
@@ -20,6 +29,8 @@ export default async function SellRoute() {
   if (!user) {
     redirect("/api/auth/login");
   }
+
+  const data = await getData(user.id);
   return (
     <section className="max-w-7xl mx-auto px-4 md:px-8 mb-14">
       <Card>

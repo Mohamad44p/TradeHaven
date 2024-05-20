@@ -1,7 +1,9 @@
 "use server";
 import db from "@/db/db";
+import { stripe } from "@/lib/stripe";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { type CategoryTypes } from "@prisma/client";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 
 export type State = {
@@ -116,10 +118,125 @@ export async function UpdateUserSettings(prevState: any, formData: FormData) {
     },
   });
 
-  const state: State = {
-    status: "success",
-    message: "Your Settings have been updated",
-  };
+  return redirect(`/`);
+}
 
-  return state;
+export async function BuyProduct(formData: FormData) {
+  const { getUser } = getKindeServerSession();
+  const user = await getUser();
+  if (!user) {
+    redirect("/api/auth/login");
+  }
+  const id = formData.get("id") as string;
+  const data = await db.product.findUnique({
+    where: {
+      id: id,
+    },
+    select: {
+      name: true,
+      smallDescription: true,
+      price: true,
+      images: true,
+      productFile: true,
+      User: {
+        select: {
+          connectedAccountId: true,
+        },
+      },
+    },
+  });
+
+  const session = await stripe.checkout.sessions.create({
+    mode: "payment",
+    line_items: [
+      {
+        price_data: {
+          currency: "usd",
+          unit_amount: Math.round((data?.price as number) * 100),
+          product_data: {
+            name: data?.name as string,
+            description: data?.smallDescription,
+            images: data?.images,
+          },
+        },
+        quantity: 1,
+      },
+    ],
+    metadata: {
+      link: data?.productFile as string,
+    },
+
+    payment_intent_data: {
+      application_fee_amount: Math.round((data?.price as number) * 100) * 0.1,
+      transfer_data: {
+        destination: data?.User?.connectedAccountId as string,
+      },
+    },
+    success_url: "http://localhost:3000/payment/success",
+    cancel_url: "http://localhost:3000/payment/cancel",
+  });
+
+  return redirect(session.url as string);
+}
+
+export async function CreateStripeAccoutnLink() {
+  const { getUser } = getKindeServerSession();
+
+  const user = await getUser();
+
+  if (!user) {
+    redirect("/api/auth/login");
+  }
+
+  const data = await db.user.findUnique({
+    where: {
+      id: user.id,
+    },
+    select: {
+      connectedAccountId: true,
+    },
+  });
+
+  const accountLink = await stripe.accountLinks.create({
+    account: data?.connectedAccountId as string,
+    refresh_url: "http://localhost:3000/billing",
+    return_url: `http://localhost:3000/return/${data?.connectedAccountId}`,
+    type: "account_onboarding",
+  });
+
+  await db.user.update({
+    where: {
+      id: user.id,
+    },
+    data: {
+      stripeConnectedLinked: true,
+    },
+  });
+
+  return redirect(accountLink.url);
+}
+
+export async function GetStripeDashboardLink() {
+  const { getUser } = getKindeServerSession();
+
+  const user = await getUser();
+
+  if (!user) {
+    redirect("/api/auth/login");
+  }
+
+  const data = await db.user.findUnique({
+    where: {
+      id: user.id,
+    },
+    select: {
+      connectedAccountId: true,
+    },
+  });
+
+  const loginLink = await stripe.accounts.createLoginLink(
+    data?.connectedAccountId as string
+  );
+
+  return redirect(loginLink.url);
 }

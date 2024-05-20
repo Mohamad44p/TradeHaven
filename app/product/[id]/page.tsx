@@ -13,6 +13,7 @@ import Image from "next/image";
 import db from "@/db/db";
 import { BuyButton } from "@/components/sell/SubmitButtons";
 import { ProductDescription } from "@/components/sell/ProductDescription";
+import { BuyProduct } from "@/app/actions";
 
 async function getData(id: string) {
   const data = await db.product.findUnique({
@@ -74,7 +75,10 @@ export default async function ProductPage({
 
         <p className="mt-2 text-muted-foreground">{data?.smallDescription}</p>
         <input type="hidden" name="id" value={data?.id} />
-        <BuyButton price={data?.price as number} />
+        <form action={BuyProduct}>
+          <input type="hidden" name="id" value={data?.id} />
+          <BuyButton price={data?.price as number} />
+        </form>
 
         <div className="border-t  mt-10 pt-10">
           <div className="grid grid-cols-2 w-full gap-y-3">

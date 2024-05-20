@@ -8,12 +8,14 @@ datasource db {
 }
 
 model User {
-  id           String    @id @map("_id")
-  email        String
-  firstName    String
-  lastName     String
-  profileImage String
-  Product      Product[]
+  id                    String    @id @map("_id")
+  email                 String
+  firstName             String
+  lastName              String
+  profileImage          String
+  connectedAccountId    String    @unique
+  stripeConnectedLinked Boolean   @default(false)
+  Product               Product[]
 }
 
 model Product {
