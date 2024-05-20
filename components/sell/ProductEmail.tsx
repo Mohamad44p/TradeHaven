@@ -20,7 +20,7 @@ import {
             <Container style={container}>
               <Text className="text-2xl font-semibold">Hi Friend,</Text>
               <Text className="text-lg text-gray-600">
-                Thank you for buying your product at MarshalUI
+                Thank you for buying your product at TradeHaven. You can download it
               </Text>
               <Section className="w-full flex justify-center mt-7">
                 <Button
